@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import './PageTwo.css';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
 function PageTwo() {
   const [searchParams] = useSearchParams();
   const [results, setResults] = useState([]);
@@ -20,7 +22,7 @@ function PageTwo() {
 
     const fetchAssets = async () => {
       try {
-        const response = await fetch('https://localhost:4000/api/assets/search', {
+        const response = await fetch(`${BACKEND_URL}/api/assets/search`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ bearerToken: accessToken }),
@@ -63,7 +65,7 @@ function PageTwo() {
             const format = lastDot > 0 ? repoName.substring(lastDot + 1) : 'jpeg';
             const description = item?.assetMetadata?.['autogen:description'] || '';
 
-            const imgSrc = `https://localhost:4000/api/getMedia?assetId=${encodeURIComponent(item.assetId)}&seoName=${encodeURIComponent(seoName)}&format=${encodeURIComponent(format)}&bearerToken=${encodeURIComponent(accessToken)}`;
+            const imgSrc = `${BACKEND_URL}/api/getMedia?assetId=${encodeURIComponent(item.assetId)}&seoName=${encodeURIComponent(seoName)}&format=${encodeURIComponent(format)}&bearerToken=${encodeURIComponent(accessToken)}`;
 
             return (
               <div className="asset-tile" key={item.assetId || index}>

@@ -2,5 +2,11 @@ node_modules/
 client/node_modules/
 client/build/
 certs/
-client/.env
 .DS_Store
+
+# Env files contain secrets — keep out of git
+server/.env.development
+server/.env.production
+client/.env
+client/.env.development
+client/.env.production

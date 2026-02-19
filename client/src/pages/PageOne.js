@@ -2,12 +2,7 @@ import React from 'react';
 import Header from '../components/Header';
 import './PageOne.css';
 
-/*
- * The "Authenticate" button navigates to the backend server,
- * which handles the redirect to the external auth provider.
- * All secrets (client_id, client_secret, etc.) stay server-side.
- */
-const AUTH_SERVER_URL = 'https://localhost:4000/auth/login';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 function PageOne() {
   return (
@@ -16,7 +11,7 @@ function PageOne() {
       <main className="page-one-body">
         <div className="button-group">
           <a
-            href={AUTH_SERVER_URL}
+            href={`${BACKEND_URL}/auth/login`}
             className="action-button primary-link"
           >
             Authenticate

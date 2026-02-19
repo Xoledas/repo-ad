@@ -2,38 +2,34 @@ const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
 const https = require('https');
+const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+/* ─── LOAD ENVIRONMENT VARIABLES ─────────────────────────────── */
+const NODE_ENV = process.env.NODE_ENV || 'development';
+require('dotenv').config({
+  path: path.join(__dirname, `.env.${NODE_ENV}`),
+});
+
+if (NODE_ENV === 'development') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
+const PORT = process.env.PORT || 4000;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+const BACKEND_URL = process.env.BACKEND_URL;
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const TOKEN_ENDPOINT = process.env.TOKEN_ENDPOINT;
+const AUTH_SCOPES = process.env.AUTH_SCOPES;
+const SSL_KEY_FILE = process.env.SSL_KEY_FILE;
+const SSL_CERT_FILE = process.env.SSL_CERT_FILE;
+
+const AUTH_CALLBACK_URL = `${BACKEND_URL}/auth/callback`;
+const AUTH_LOGIN_URL = `https://ims-na1.adobelogin.com/ims/authorize/v2?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(AUTH_CALLBACK_URL)}&scope=${encodeURIComponent(AUTH_SCOPES)}&response_type=code`;
+
 const app = express();
-const PORT = 4000;
-
-/* ─── SSL CERTIFICATES ──────────────────────────────────────── */
-const sslOptions = {
-  key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'key.pem')),
-  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'cert.pem')),
-};
-
-/* ─── CONFIGURABLE SETTINGS ─────────────────────────────────── */
-const FRONTEND_URL = 'https://localhost:3000';
-const AUTH_CALLBACK_URL = `https://localhost:${PORT}/auth/callback`;
-
-/*
- * Set AUTH_LOGIN_URL to your Adobe IMS authorization endpoint.
- * The redirect_uri parameter in this URL should match AUTH_CALLBACK_URL.
- *
- * Example:
- *   https://ims-na1.adobelogin.com/ims/authorize/v2
- *     ?client_id=a3157759fd0f46f0b393603c4f2df8d0
- *     &redirect_uri=https://localhost:4000/auth/callback
- *     &scope=openid,AdobeID
- *     &response_type=code
- */
-const AUTH_LOGIN_URL = 'https://ims-na1.adobelogin.com/ims/authorize/v2?client_id=a3157759fd0f46f0b393603c4f2df8d0&redirect_uri=https://localhost:4000/auth/callback&scope=openid,aem.assets.delivery,AdobeID&response_type=code';
-
-const TOKEN_ENDPOINT = 'https://ims-na1.adobelogin.com/ims/token/v3';
-const CLIENT_ID = 'a3157759fd0f46f0b393603c4f2df8d0';
-const CLIENT_SECRET = 'p8e-zc3JOZcpp5Z3mg_nFkrLFSeMjwlvwHrY';
 
 /* ─── MIDDLEWARE ─────────────────────────────────────────────── */
 app.use(cors({
@@ -44,13 +40,11 @@ app.use(express.json());
 
 /* ─── AUTH ROUTES ────────────────────────────────────────────── */
 
-// Step 1: Redirect the user to the external authentication page
 app.get('/auth/login', (req, res) => {
   console.log(`Redirecting to auth provider: ${AUTH_LOGIN_URL}`);
   res.redirect(AUTH_LOGIN_URL);
 });
 
-// Step 2: Callback — the auth provider redirects here with ?code=...
 app.get('/auth/callback', async (req, res) => {
   const { code } = req.query;
 
@@ -61,7 +55,6 @@ app.get('/auth/callback', async (req, res) => {
   console.log('Received authorization code, exchanging for access token…');
 
   try {
-    // Step 3: Exchange the code for an access token
     const params = new URLSearchParams();
     params.append('grant_type', 'authorization_code');
     params.append('client_id', CLIENT_ID);
@@ -85,7 +78,6 @@ app.get('/auth/callback', async (req, res) => {
 
     console.log('Access token obtained successfully, redirecting to frontend…');
 
-    // Step 4: Redirect to PageTwo with the access token
     const redirectUrl = `${FRONTEND_URL}/results?access_token=${encodeURIComponent(tokenData.access_token)}`;
     res.redirect(redirectUrl);
   } catch (error) {
@@ -174,8 +166,19 @@ app.get('/api/getMedia', async (req, res) => {
   }
 });
 
-/* ─── START HTTPS SERVER ─────────────────────────────────────── */
-https.createServer(sslOptions, app).listen(PORT, () => {
-  console.log(`Backend server running on https://localhost:${PORT}`);
-  console.log(`Auth callback URL: ${AUTH_CALLBACK_URL}`);
-});
+/* ─── START SERVER (HTTPS when certs are configured, HTTP otherwise) */
+if (SSL_KEY_FILE && SSL_CERT_FILE) {
+  const sslOptions = {
+    key: fs.readFileSync(path.resolve(__dirname, SSL_KEY_FILE)),
+    cert: fs.readFileSync(path.resolve(__dirname, SSL_CERT_FILE)),
+  };
+  https.createServer(sslOptions, app).listen(PORT, () => {
+    console.log(`[${NODE_ENV}] Backend running on https://localhost:${PORT}`);
+    console.log(`Auth callback URL: ${AUTH_CALLBACK_URL}`);
+  });
+} else {
+  http.createServer(app).listen(PORT, () => {
+    console.log(`[${NODE_ENV}] Backend running on http://localhost:${PORT}`);
+    console.log(`Auth callback URL: ${AUTH_CALLBACK_URL}`);
+  });
+}
