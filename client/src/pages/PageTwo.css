@@ -1,0 +1,68 @@
+.page-two-body {
+  padding: 40px;
+  background-color: #f5f7fa;
+  min-height: calc(100vh - 80px);
+}
+
+.status-text {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #555;
+  margin-top: 60px;
+}
+
+.status-text.error {
+  color: #d9534f;
+}
+
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.asset-tile {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.asset-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
+
+.asset-description {
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.5;
+  border-top: 1px solid #f0f0f0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.asset-tile:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+}
+
+.asset-id {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+  color: #444;
+  word-break: break-all;
+  text-align: center;
+  line-height: 1.4;
+}
